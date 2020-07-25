@@ -16,13 +16,13 @@ import {
   del,
   requestBody,
 } from '@loopback/rest';
-import {Todo} from '../models';
+import {Todo, TodoList} from '../models';
 import {TodoRepository} from '../repositories';
 
 export class TodoController {
   constructor(
     @repository(TodoRepository)
-    public todoRepository : TodoRepository,
+    public todoRepository: TodoRepository,
   ) {}
 
   @post('/todos', {
@@ -57,9 +57,7 @@ export class TodoController {
       },
     },
   })
-  async count(
-    @param.where(Todo) where?: Where<Todo>,
-  ): Promise<Count> {
+  async count(@param.where(Todo) where?: Where<Todo>): Promise<Count> {
     return this.todoRepository.count(where);
   }
 
@@ -78,9 +76,7 @@ export class TodoController {
       },
     },
   })
-  async find(
-    @param.filter(Todo) filter?: Filter<Todo>,
-  ): Promise<Todo[]> {
+  async find(@param.filter(Todo) filter?: Filter<Todo>): Promise<Todo[]> {
     return this.todoRepository.find(filter);
   }
 
@@ -120,9 +116,27 @@ export class TodoController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Todo, {exclude: 'where'}) filter?: FilterExcludingWhere<Todo>
+    @param.filter(Todo, {exclude: 'where'}) filter?: FilterExcludingWhere<Todo>,
   ): Promise<Todo> {
     return this.todoRepository.findById(id, filter);
+  }
+
+  @get('/todos/{id}/todo-list', {
+    responses: {
+      '200': {
+        description: 'TodoList belonging to Todo',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: getModelSchemaRef(TodoList)},
+          },
+        },
+      },
+    },
+  })
+  async getTodoList(
+    @param.path.number('id') id: typeof Todo.prototype.id,
+  ): Promise<TodoList> {
+    return this.todoRepository.todoList(id);
   }
 
   @patch('/todos/{id}', {
